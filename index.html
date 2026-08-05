@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Predračun — DENTALNO ESTETSKI STUDIO</title>
+<style>
+  :root{
+    --gold:#b8860b;
+    --gold-soft:#d4a853;
+    --ink:#1a1a1a;
+    --muted:#6b7280;
+    --line:#d0d0d0;
+    --bg:#f3f4f6;
+    --paper:#ffffff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);padding:20px;
+  }
+  .toolbar{
+    max-width:810px;margin:0 auto 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;
+  }
+  .toolbar h1{font-size:16px;font-weight:700;margin-right:auto;}
+  .toolbar .brand{color:var(--gold);}
+  .btn{
+    border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;
+    font-size:13px;cursor:pointer;font-weight:600;color:var(--ink);
+  }
+  .btn:hover{background:#f0f0f0;}
+  .btn.active{background:var(--gold);border-color:var(--gold);color:#fff;}
+  .btn.primary{background:var(--gold);border-color:var(--gold);color:#fff;}
+  .btn.primary:hover{background:var(--gold-soft);}
+  .langgroup{display:flex;gap:4px;}
+  .langgroup .btn[data-lang]{width:44px;text-align:center;}
+
+  /* print sheet */
+  .sheet{
+    max-width:810px;margin:0 auto;background:var(--paper);
+    border:1px solid var(--line);border-radius:4px;padding:36px 40px;
+  }
+  .clinic{text-align:center;border-bottom:2px solid var(--gold);padding-bottom:12px;margin-bottom:16px;}
+  .clinic h2{font-size:20px;letter-spacing:1px;color:#111;}
+  .clinic .doc{font-weight:700;margin:4px 0;}
+  .clinic .addr{font-size:12.5px;color:#333;line-height:1.5;}
+  .doc-title{font-size:16px;font-weight:800;color:var(--gold);margin:6px 0 14px;letter-spacing:.5px;}
+
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:2px;}
+  .field input{width:100%;border:none;border-bottom:1px solid #aaa;padding:4px 2px;font-size:14px;background:transparent;}
+  .field input:focus{outline:none;border-bottom:2px solid var(--gold);}
+
+  .schema{}
+  .schema .cap{font-size:12px;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:10px;}
+  .schema .rows-controls select{padding:2px 6px;font-size:12px;border:1px solid var(--line);border-radius:4px;}
+  .schema-box{border:0;background:#fff;}
+  .schema-row{border:1.5px solid #999;border-radius:4px;height:62px;margin-bottom:6px;}
+
+  table{width:100%;border-collapse:collapse;margin:10px 0 auto;}
+  thead th{
+    text-align:left;border-bottom:2px solid var(--gold);padding:6px 8px;font-size:11px;
+    text-transform:uppercase;letter-spacing:.5px;color:#444;
+  }
+  thead th:not(:first-child){text-align:right;}
+  tbody td{border-bottom:1px solid #eee;padding:5px 8px;font-size:13.5px;vertical-align:middle;}
+  tbody td:nth-child(2),tbody td:nth-child(3),tbody td:nth-child(4){text-align:right;white-space:nowrap;}
+  tbody input{border:none;font-size:13px;background:transparent;text-align:inherit;width:100%;}
+  tbody input:focus{outline:none;border-bottom:1px solid var(--gold-soft);}
+  td.svc{min-width:220px;}
+  td .del{background:none;border:none;color:#c33;font-size:14px;cursor:pointer;padding:0 2px;}
+  .empty{color:#bbb;font-style:italic;}
+
+  .total-row{margin-top:12px;display:flex;justify-content:flex-end;align-items:center;gap:12px;}
+  .total-row .lbl{font-size:13px;font-weight:600;}
+  .total-row .val{font-size:18px;font-weight:800;color:var(--gold);border-bottom:2px solid var(--gold);min-width:150px;text-align:right;padding:2px 6px;}
+  .sign{margin-top:56px;display:flex;justify-content:flex-end;}
+  .sign .box{width:260px;border-top:1px solid #999;padding-top:6px;font-size:12px;color:var(--muted);text-align:center;}
+  .footer-note{margin-top:14px;font-size:10.5px;color:var(--muted);text-align:center;}
+
+  /* catalog */
+  .catalog{max-width:810px;margin:18px auto 0;}
+  .catalog h3{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+  .cat-block{margin-bottom:18px;}
+  .cat-block h4{
+    font-size:12px;font-weight:800;letter-spacing:1px;color:var(--gold);
+    border-left:4px solid var(--gold);padding-left:8px;margin-bottom:8px;
+  }
+  .cat-items{display:flex;flex-wrap:wrap;gap:6px;}
+  .svc-btn{
+    border:1px solid var(--line);background:#fff;border-radius:20px;padding:5px 12px;
+    font-size:12.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  }
+  .svc-btn:hover{border-color:var(--gold);background:#fdf7e7;}
+  .svc-btn .p{color:var(--muted);font-weight:600;margin-left:auto;}
+  .add-custom{margin-top:10px;}
+
+  /* print */
+  @media print{
+    body{background:#fff;padding:0;}
+    .toolbar,.catalog{display:none !important;}
+    .sheet{border:none;max-width:100%;padding:8mm 12mm;margin:0;}
+    .schema-row{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <h1><span class="brand">Predračun</span> — Dentalno estetski studio</h1>
+  <div class="langgroup" id="langGroup">
+    <button class="btn active" data-lang="sl" title="Slovenščina">SL</button>
+    <button class="btn" data-lang="it" title="Italiano">IT</button>
+    <button class="btn" data-lang="de" title="Deutsch">DE</button>
+  </div>
+  <button class="btn" id="resetBtn" title="Reset">↺</button>
+  <button class="btn primary" onclick="window.print()" id="printBtn">🖨 Natisni / PDF</button>
+</div>
+
+<div class="sheet">
+  <div class="clinic">
+    <h2>DENTALNO ESTETSKI STUDIO</h2>
+    <div class="doc">Nina Čelesnik, dr.dent.med.</div>
+    <div class="addr">Prešernova 15 · 4260 Bled - SLOVENIJA<br>tel: +386 575 0801 · e.mail: nina@celesnik.net</div>
+  </div>
+
+  <div class="doc-title" id="docTitle">PREDRAČUN</div>
+
+  <div class="fields">
+    <div class="field"><label id="lblSurname">Priimek pacienta</label><input id="surname" autocomplete="off"></div>
+    <div class="field"><label id="lblName">Ime pacienta</label><input id="pname" autocomplete="off"></div>
+    <div class="field"><label id="lblDate">Datum</label><input id="date" type="date"></div>
+  </div>
+
+  <div class="schema">
+    <div class="cap">
+      <span id="lblSchema">Shema zob</span>
+      <span style="flex:1"></span>
+      <span id="lblRows">vrste:</span>
+      <select id="schemaRows" onchange="renderSchema()">
+        <option value="2">2</option>
+        <option value="3" selected>3</option>
+        <option value="4">4</option>
+      </select>
+    </div>
+    <div id="schemaBox" class="schema-box"></div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th id="thSvc">Storitve</th>
+        <th id="thQty" style="width:70px">Količina</th>
+        <th id="thPrice" style="width:90px">Cena</th>
+        <th id="thTotal" style="width:100px">Skupaj</th>
+        <th style="width:24px"></th>
+      </tr>
+    </thead>
+    <tbody id="items"></tbody>
+  </table>
+
+  <div class="total-row">
+    <span class="lbl" id="lblGrand">Skupni znesek:</span>
+    <span class="val" id="grandTotal">0,00 €</span>
+  </div>
+
+  <div class="sign">
+    <div class="box" id="lblSign">Podpis</div>
+  </div>
+  <div class="footer-note">Predračun ni račun. Veljavnost predračuna 3 mesece.</div>
+</div>
+
+<div class="catalog">
+  <h3 id="catalogTitle">Katalog storitev — klikni za dodajanje</h3>
+  <div id="cats"></div>
+  <div class="add-custom">
+    <button class="btn" id="addCustomBtn" onclick="addRow('','','')">+ Dodaj prazno vrstico</button>
+  </div>
+</div>
+
+<script>
+/* ---------- DATA ---------- */
+var SERVICES = [
+  {cat:"PROTETIKA", sl:"PROTETIKA", it:"PROTESI", de:"PROTHETIK", items:[
+    {p:460,sl:"Porcelanska prevleka",it:"Corona in ceramica",de:"Keramikkrone"},
+    {p:470,sl:"Cirkonij prevleka",it:"Corona in zirconio",de:"Zirkoniumkrone"},
+    {p:470,sl:"Cirkonij faseta",it:"Faccetta in zirconio",de:"Zirkonium-Veneer"},
+    {p:45, sl:"Provizorična prevleka",it:"Corona provvisoria",de:"Provisorische Krone"},
+    {p:20, sl:"Anestezija",it:"Anestesia",de:"Anästhesie"},
+    {p:1600,sl:"Totalna proteza",it:"Protesi totale",de:"Totalprothese"},
+    {p:1700,sl:"Wisil proteza",it:"Protesi",de:"Prothese"},
+    {p:200,sl:"Anker",it:"Ancoraggio",de:"Anker"},
+    {p:250,sl:"Gred",it:"Barra",de:"Steg"},
+    {p:220,sl:"Zatiček",it:"Perno",de:"Stift/Post"},
+    {p:950,sl:"Parcialna proteza",it:"Protesi parziale",de:"Teilprothese"},
+    {p:120,sl:"Brušenje zoba",it:"Preparazione del dente",de:"Zahnpräparation"},
+    {p:110,sl:"Dograditev krna",it:"Ricostruzione del moncone",de:"Stumpfaufbau"}
+  ]},
+  {cat:"IMPLANTOLOGIJA", sl:"IMPLANTOLOGIJA", it:"IMPLANTOLOGIA", de:"IMPLANTOLOGIE", items:[
+    {p:800,sl:"Implantat",it:"Impianto",de:"Implantat"},
+    {p:250,sl:"Abutment",it:"Abutment",de:"Abutment"},
+    {p:150,sl:"2. faza odpiranje implantata",it:"2ª fase scopertura impianto",de:"2. Phase Implantatfreilegung"},
+    {p:120,sl:"Odtisniki",it:"Impronte",de:"Abdruck"},
+    {p:120,sl:"Labor analogi",it:"Analoghi di laboratorio",de:"Laboranaloge"},
+    {p:150,sl:"Ključek za implantate",it:"Chiave per impianti",de:"Implantatschlüssel"},
+    {p:300,sl:"Individualni abutmenti",it:"Abutment individuali",de:"Individuelle Abutments"}
+  ]},
+  {cat:"KONZERVATIVA", sl:"KONZERVATIVA", it:"CONSERVATIVA", de:"ZAHNERHALTUNG", items:[
+    {p:70, sl:"Plomba 1. razred",it:"Otturazione classe I",de:"Füllung Klasse I"},
+    {p:90, sl:"Plomba 2. razred",it:"Otturazione classe II",de:"Füllung Klasse II"},
+    {p:130,sl:"Plomba 3. razred",it:"Otturazione classe III",de:"Füllung Klasse III"},
+    {p:140,sl:"Endodontija 1 kanal",it:"Endodonzia 1 canale",de:"Wurzelbehandlung 1 Kanal"},
+    {p:180,sl:"Endodontija 2 kanala",it:"Endodonzia 2 canali",de:"Wurzelbehandlung 2 Kanäle"},
+    {p:220,sl:"Endodontija 3 kanali",it:"Endodonzia 3 canali",de:"Wurzelbehandlung 3 Kanäle"},
+    {p:60, sl:"Začasna plomba",it:"Otturazione provvisoria",de:"Provisorische Füllung"},
+    {p:100,sl:"Menjava zdravila",it:"Cambio medicazione",de:"Medikamentenwechsel"},
+    {p:220,sl:"Faseta kompozitna",it:"Faccetta in composito",de:"Komposit-Veneer"}
+  ]},
+  {cat:"KIRURGIJA", sl:"KIRURGIJA", it:"CHIRURGIA", de:"CHIRURGIE", items:[
+    {p:90, sl:"Ekstrakcija enostavna",it:"Estrazione semplice",de:"Einfache Extraktion"},
+    {p:160,sl:"Ekstrakcija komplicirana",it:"Estrazione complicata",de:"Komplizierte Extraktion"},
+    {p:290,sl:"Ekstrakcija kirurška",it:"Estrazione chirurgica",de:"Chirurgische Extraktion"},
+    {p:220,sl:"Ekstrakcija pod mostom",it:"Estrazione sotto ponte",de:"Extraktion unter Brücke"},
+    {p:380,sl:"Apikotomija",it:"Apicectomia",de:"Wurzelspitzenresektion"}
+  ]}
+];
+
+var L = "sl";
+
+var T = {
+  sl:{title:"PREDRAČUN",surname:"Priimek pacienta",name:"Ime pacienta",date:"Datum",
+      schema:"Shema zob",rows:"vrste:",svc:"Storitve",qty:"Količina",price:"Cena",col:"Skupaj",
+      grand:"Skupni znesek:",sign:"Podpis",catalog:"Katalog storitev — klikni za dodajanje",
+      print:"🖨 Natisni / PDF",custom:"+ Dodaj prazno vrstico",note:"Predračun ni račun. Veljavnost predračuna 3 mesece."},
+  it:{title:"PREVENTIVO",surname:"Cognome paziente",name:"Nome paziente",date:"Data",
+      schema:"Schema denti",rows:"righe:",svc:"Prestazioni",qty:"Quantità",price:"Prezzo",col:"Totale",
+      grand:"Totale complessivo:",sign:"Firma",catalog:"Catalogo prestazioni — clicca per aggiungere",
+      print:"🖨 Stampa / PDF",custom:"+ Aggiungi riga vuota",note:"Preventivo non è una fattura. Validità preventivo 3 mesi."},
+  de:{title:"KOSTENVORANSCHLAG",surname:"Nachname Patient",name:"Vorname Patient",date:"Datum",
+      schema:"Zahnschema",rows:"Zeilen:",svc:"Leistungen",qty:"Menge",price:"Preis",col:"Summe",
+      grand:"Gesamtbetrag:",sign:"Unterschrift",catalog:"Leistungsverzeichnis — klicken zum Hinzufügen",
+      print:"🖨 Drucken / PDF",custom:"+ Leere Zeile hinzufügen",note:"Kostenvoranschlag ist keine Rechnung. Gültigkeit 3 Monate."}
+};
+
+/* ---------- HELPERS ---------- */
+function fmt(n){
+  n = Math.round((Number(n)||0)*100)/100;
+  return n.toLocaleString("sl-SI",{minimumFractionDigits:2,maximumFractionDigits:2}).replace(/\u00A0/g," ") + " €";
+}
+function svcName(s){return s[L]||s.sl;}
+function catName(c){return c[L]||c.sl;}
+
+/* ---------- RENDER CATALOG ---------- */
+function renderCatalog(){
+  var cEls = document.getElementById("cats");
+  cEls.innerHTML = SERVICES.map(function(cat){
+    return '<div class="cat-block"><h4>'+catName(cat)+'</h4><div class="cat-items">'+
+      cat.items.map(function(s){
+        return '<button class="svc-btn" onclick="addRow('+JSON.stringify(svcName(s)).replace(/"/g,"&quot;")+','+s.p+')"><span>'+svcName(s)+'</span><span class="p">'+s.p+' €</span></button>';
+      }).join("")+
+    '</div></div>';
+  }).join("");
+}
+/* note: onclick built safely with string for name and number for price */
+
+/* ---------- ROWS ---------- */
+function addRow(name, price){
+  var tbody = document.getElementById("items");
+  var tr = document.createElement("tr");
+  tr.innerHTML =
+    '<td class="svc"><input class="svc-i" value="'+(name||"").replace(/"/g,"&quot;")+'"></td>'+
+    '<td><input class="qty-i" type="number" min="0" step="1" value="1"></td>'+
+    '<td><input class="price-i" type="number" min="0" step="1" value="'+price+'"></td>'+
+    '<td class="line-total">0,00 €</td>'+
+    '<td><button class="del" onclick="this.closest(\'tr\').remove();calc();" title="odstrani">✕</button></td>';
+  tbody.appendChild(tr);
+  calc();
+}
+function recalcLine(tr){
+  var qty = parseFloat(tr.querySelector(".qty-i").value)||0;
+  var pr  = parseFloat(tr.querySelector(".price-i").value)||0;
+  var t   = qty*pr;
+  tr.querySelector(".line-total").textContent = fmt(t);
+  return t;
+}
+function calc(){
+  var sum=0, trs=document.querySelectorAll("#items tr");
+  if(trs.length===0){
+    document.getElementById("grandTotal").textContent = fmt(0);
+    var tbody=document.getElementById("items");
+    if(!tbody.querySelector(".empty")){
+      var e=document.createElement("tr");
+      e.className="empty";
+      e.innerHTML='<td colspan="5">—</td>';
+      tbody.appendChild(e);
+    }
+    return;
+  }
+  trs.forEach(function(tr){ sum += recalcLine(tr); });
+  document.getElementById("grandTotal").textContent = fmt(sum);
+}
+document.addEventListener("input",function(e){
+  if(e.target.classList.contains("qty-i")||e.target.classList.contains("price-i")) calc();
+});
+
+/* ---------- SCHEMA ---------- */
+function renderSchema(){
+  var n = parseInt(document.getElementById("schemaRows").value)||3;
+  var box = document.getElementById("schemaBox");
+  box.innerHTML='';
+  for(var i=0;i<n;i++){ var r=document.createElement("div"); r.className="schema-row"; box.appendChild(r); }
+}
+
+/* ---------- LANGUAGE ---------- */
+function applyLang(){
+  L = document.querySelector("#langGroup .btn.active").getAttribute("data-lang");
+  var t = T[L];
+  document.getElementById("docTitle").textContent = t.title;
+  document.getElementById("lblSurname").textContent = t.surname;
+  document.getElementById("lblName").textContent = t.name;
+  document.getElementById("lblDate").textContent = t.date;
+  document.getElementById("lblSchema").textContent = t.schema;
+  document.getElementById("lblRows").textContent = t.rows;
+  document.getElementById("thSvc").textContent = t.svc;
+  document.getElementById("thQty").textContent = t.qty;
+  document.getElementById("thPrice").textContent = t.price;
+  document.getElementById("thTotal").textContent = t.col;
+  document.getElementById("lblGrand").textContent = t.grand;
+  document.getElementById("lblSign").textContent = t.sign;
+  document.getElementById("catalogTitle").textContent = t.catalog;
+  document.getElementById("printBtn").textContent = t.print;
+  document.getElementById("addCustomBtn").textContent = t.custom;
+  var note=document.querySelector(".footer-note"); note.textContent=t.note;
+  renderCatalog();
+  document.title = t.title + " — DENTALNO ESTETSKI STUDIO";
+}
+document.querySelectorAll("#langGroup .btn").forEach(function(b){
+  b.addEventListener("click",function(){
+    document.querySelectorAll("#langGroup .btn").forEach(function(x){x.classList.remove("active");});
+    b.classList.add("active");
+    applyLang();
+  });
+});
+
+/* ---------- INIT ---------- */
+document.getElementById("date").value = new Date().toISOString().slice(0,10);
+document.getElementById("resetBtn").addEventListener("click",function(){
+  document.getElementById("surname").value="";
+  document.getElementById("pname").value="";
+  document.getElementById("items").innerHTML="";
+  calc();
+});
+applyLang();
+renderSchema();
+</script>
+</body>
+</html>
