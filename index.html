@@ -3,6 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* Night-mode init: apply saved choice, else follow OS, before first paint */
+(function(){
+  var t = null;
+  try{ t = localStorage.getItem('predracun-theme'); }catch(e){}
+  if(!t){
+    t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  }
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
 <title>Predračun — DENTALNO ESTETSKI STUDIO</title>
 <style>
   :root{
@@ -13,23 +24,66 @@
     --line:#d0d0d0;
     --bg:#f3f4f6;
     --paper:#ffffff;
+    --card:#ffffff;
+    --ctrl-bg:#ffffff;
+    --ctrl-hover:#f0f0f0;
+    --chip-hover:#fdf7e7;
+    --field-line:#aaa;
+    --th-color:#444;
+    --td-border:#eee;
+    --empty:#bbb;
+    --schema-border:#999;
+    --sign-line:#999;
+    --clinic-title:#111;
+    --clinic-addr:#333;
+    --del-bg:#fdecec;
+    --shadow:0 1px 2px rgba(0,0,0,.06);
+  }
+  /* ---------- NIGHT MODE ---------- */
+  :root[data-theme="dark"]{
+    --gold:#d4a853;
+    --gold-soft:#e6c078;
+    --ink:#e5e7eb;
+    --muted:#9ca3af;
+    --line:#3a3a3a;
+    --bg:#121212;
+    --paper:#1b1b1b;
+    --card:#232323;
+    --ctrl-bg:#2b2b2b;
+    --ctrl-hover:#3a3a3a;
+    --chip-hover:#2b2416;
+    --field-line:#6b6b6b;
+    --th-color:#9ca3af;
+    --td-border:#2a2a2a;
+    --empty:#5b5b5b;
+    --schema-border:#555;
+    --sign-line:#555;
+    --clinic-title:#f3f4f6;
+    --clinic-addr:#cbd5e1;
+    --del-bg:#3a2020;
+    --shadow:0 1px 2px rgba(0,0,0,.4);
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:var(--bg);color:var(--ink);padding:20px;
+    transition:background .2s ease,color .2s ease;
   }
+  input{color:var(--ink);}
+  input:disabled,select{color:var(--ink);}
   .toolbar{
     max-width:810px;margin:0 auto 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-    background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;
+    background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;
+    box-shadow:var(--shadow);
   }
   .toolbar h1{font-size:16px;font-weight:700;margin-right:auto;}
   .toolbar .brand{color:var(--gold);}
   .btn{
-    border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;
+    border:1px solid var(--line);background:var(--ctrl-bg);border-radius:8px;padding:7px 12px;
     font-size:13px;cursor:pointer;font-weight:600;color:var(--ink);
+    transition:background .15s ease;
   }
-  .btn:hover{background:#f0f0f0;}
+  .btn:hover{background:var(--ctrl-hover);}
   .btn.active{background:var(--gold);border-color:var(--gold);color:#fff;}
   .btn.primary{background:var(--gold);border-color:var(--gold);color:#fff;}
   .btn.primary:hover{background:var(--gold-soft);}
@@ -40,43 +94,45 @@
   .sheet{
     max-width:810px;margin:0 auto;background:var(--paper);
     border:1px solid var(--line);border-radius:4px;padding:36px 40px;
+    box-shadow:var(--shadow);
   }
   .clinic{text-align:center;border-bottom:2px solid var(--gold);padding-bottom:12px;margin-bottom:16px;}
-  .clinic h2{font-size:20px;letter-spacing:1px;color:#111;}
+  .clinic h2{font-size:20px;letter-spacing:1px;color:var(--clinic-title);}
   .clinic .doc{font-weight:700;margin:4px 0;}
-  .clinic .addr{font-size:12.5px;color:#333;line-height:1.5;}
+  .clinic .addr{font-size:12.5px;color:var(--clinic-addr);line-height:1.5;}
   .doc-title{font-size:16px;font-weight:800;color:var(--gold);margin:6px 0 14px;letter-spacing:.5px;}
 
   .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin-bottom:14px;}
   .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:2px;}
-  .field input{width:100%;border:none;border-bottom:1px solid #aaa;padding:4px 2px;font-size:14px;background:transparent;}
+  .field input{width:100%;border:none;border-bottom:1px solid var(--field-line);padding:4px 2px;font-size:14px;background:transparent;}
   .field input:focus{outline:none;border-bottom:2px solid var(--gold);}
 
   .schema{}
   .schema .cap{font-size:12px;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:10px;}
-  .schema .rows-controls select{padding:2px 6px;font-size:12px;border:1px solid var(--line);border-radius:4px;}
-  .schema-box{border:0;background:#fff;}
-  .schema-row{border:1.5px solid #999;border-radius:4px;height:62px;margin-bottom:6px;}
+  #schemaRows{background:var(--ctrl-bg);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:2px 6px;font-size:12px;}
+  #schemaRows option{background:var(--ctrl-bg);color:var(--ink);}
+  .schema-box{border:0;background:var(--paper);}
+  .schema-row{border:1.5px solid var(--schema-border);border-radius:4px;height:62px;margin-bottom:6px;}
 
   table{width:100%;border-collapse:collapse;margin:10px 0 auto;}
   thead th{
     text-align:left;border-bottom:2px solid var(--gold);padding:6px 8px;font-size:11px;
-    text-transform:uppercase;letter-spacing:.5px;color:#444;
+    text-transform:uppercase;letter-spacing:.5px;color:var(--th-color);
   }
   thead th:not(:first-child){text-align:right;}
-  tbody td{border-bottom:1px solid #eee;padding:5px 8px;font-size:13.5px;vertical-align:middle;}
+  tbody td{border-bottom:1px solid var(--td-border);padding:5px 8px;font-size:13.5px;vertical-align:middle;}
   tbody td:nth-child(2),tbody td:nth-child(3),tbody td:nth-child(4){text-align:right;white-space:nowrap;}
   tbody input{border:none;font-size:13px;background:transparent;text-align:inherit;width:100%;}
   tbody input:focus{outline:none;border-bottom:1px solid var(--gold-soft);}
   td.svc{min-width:220px;}
   td .del{background:none;border:none;color:#c33;font-size:14px;cursor:pointer;padding:0 2px;}
-  .empty{color:#bbb;font-style:italic;}
+  .empty{color:var(--empty);font-style:italic;}
 
   .total-row{margin-top:12px;display:flex;justify-content:flex-end;align-items:center;gap:12px;}
   .total-row .lbl{font-size:13px;font-weight:600;}
   .total-row .val{font-size:18px;font-weight:800;color:var(--gold);border-bottom:2px solid var(--gold);min-width:150px;text-align:right;padding:2px 6px;}
   .sign{margin-top:56px;display:flex;justify-content:flex-end;}
-  .sign .box{width:260px;border-top:1px solid #999;padding-top:6px;font-size:12px;color:var(--muted);text-align:center;}
+  .sign .box{width:260px;border-top:1px solid var(--sign-line);padding-top:6px;font-size:12px;color:var(--muted);text-align:center;}
   .footer-note{margin-top:14px;font-size:10.5px;color:var(--muted);text-align:center;}
 
   /* catalog */
@@ -89,17 +145,18 @@
   }
   .cat-items{display:flex;flex-wrap:wrap;gap:6px;}
   .svc-btn{
-    border:1px solid var(--line);background:#fff;border-radius:20px;padding:5px 12px;
+    border:1px solid var(--line);background:var(--ctrl-bg);border-radius:20px;padding:5px 12px;
     font-size:12.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+    transition:border-color .15s ease,background .15s ease;
   }
-  .svc-btn:hover{border-color:var(--gold);background:#fdf7e7;}
+  .svc-btn:hover{border-color:var(--gold);background:var(--chip-hover);}
   .svc-btn .p{color:var(--muted);font-weight:600;margin-left:auto;}
   .add-custom{margin-top:10px;}
 
   /* -------- MOBILE (phones / narrow screens) -------- */
   html{-webkit-text-size-adjust:100%;}
   @media (max-width:640px){
-    body{padding:8px;background:#fff;}
+    body{padding:8px;background:var(--bg);}
     .toolbar{flex-direction:column;align-items:stretch;gap:8px;padding:12px;position:static;}
     .toolbar h1{margin:0 0 2px;text-align:center;font-size:15px;}
     .brand{display:block;}
@@ -120,12 +177,12 @@
     thead{display:none;}
     #items{display:block;width:100%;}
     #items tr{display:block;border:1px solid var(--line);border-radius:10px;
-      padding:6px 12px 8px;margin-bottom:10px;background:#fff;}
+      padding:6px 12px 8px;margin-bottom:10px;background:var(--card);}
     #items tr.empty{border:none;text-align:center;padding:14px;color:var(--muted);font-size:14px;}
     #items tr.empty td{display:block;border:none;padding:0;text-align:center;}
     #items td{display:flex;align-items:center;justify-content:space-between;
       border:none;padding:6px 0;font-size:15px;min-width:0;}
-    #items td.svc{flex-direction:column;align-items:stretch;border-bottom:1px solid #f0f0f0;padding-bottom:6px;}
+    #items td.svc{flex-direction:column;align-items:stretch;border-bottom:1px solid var(--td-border);padding-bottom:6px;}
     #items td.svc .svc-i{font-size:16px;font-weight:600;padding:2px 0;}
     #items td.line-total{font-weight:800;color:var(--gold);font-size:16px;justify-content:space-between;}
     #items td[data-label]::before{
@@ -133,7 +190,7 @@
       font-size:11px;text-transform:uppercase;letter-spacing:.5px;
       color:var(--muted);font-weight:600;flex-shrink:0;margin-right:10px;
     }
-    #items td .del{align-self:flex-end;font-size:16px;padding:2px 6px;border-radius:8px;background:#fdecec;color:#c33;}
+    #items td .del{align-self:flex-end;font-size:16px;padding:2px 6px;border-radius:8px;background:var(--del-bg);color:#c33;}
     #items input{font-size:16px;}
     #items td input.qty-i,#items td input.price-i{width:72px;text-align:right;border-bottom:1px solid var(--line);}
 
@@ -156,7 +213,16 @@
   /* print */
   @media print{
     @page{size:A4;margin:0;}
-    body{background:#fff;padding:0;}
+    /* PDFs are always printed on white paper, even when night mode is on */
+    :root[data-theme="dark"]{
+      --gold:#b8860b;--gold-soft:#d4a853;--ink:#1a1a1a;--muted:#6b7280;
+      --line:#d0d0d0;--bg:#fff;--paper:#fff;--card:#fff;--ctrl-bg:#fff;
+      --ctrl-hover:#f0f0f0;--chip-hover:#fdf7e7;--field-line:#aaa;--th-color:#444;
+      --td-border:#eee;--empty:#bbb;--schema-border:#999;--sign-line:#999;
+      --clinic-title:#111;--clinic-addr:#333;--del-bg:#fdecec;--shadow:none;
+    }
+    body{background:#fff;padding:0;color:#1a1a1a;}
+    input,select{color:#1a1a1a !important;-webkit-text-fill-color:#1a1a1a;}
     .toolbar,.catalog{display:none !important;}
     .sheet{border:none;max-width:100%;padding:8mm 12mm;margin:0;}
     .schema-row{break-inside:avoid;}
@@ -172,6 +238,7 @@
     <button class="btn" data-lang="it" title="Italiano">IT</button>
     <button class="btn" data-lang="de" title="Deutsch">DE</button>
   </div>
+  <button class="btn" id="themeBtn" title="Temni / svetli način">🌙</button>
   <button class="btn" id="resetBtn" title="Reset">↺</button>
   <button class="btn primary" onclick="window.print()" id="printBtn">🖨 Natisni / PDF</button>
 </div>
@@ -402,6 +469,20 @@ document.querySelectorAll("#langGroup .btn").forEach(function(b){
     b.classList.add("active");
     applyLang();
   });
+});
+
+/* ---------- NIGHT MODE TOGGLE ---------- */
+var themeBtn = document.getElementById("themeBtn");
+function setTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  themeBtn.textContent = (t === "dark") ? "☀️" : "🌙";
+  themeBtn.title = (t === "dark") ? "Svetli način" : "Temni način";
+  try{ localStorage.setItem("predracun-theme", t); }catch(e){}
+}
+setTheme(document.documentElement.getAttribute("data-theme") || "light");
+themeBtn.addEventListener("click", function(){
+  var cur = document.documentElement.getAttribute("data-theme");
+  setTheme(cur === "dark" ? "light" : "dark");
 });
 
 /* ---------- INIT ---------- */
