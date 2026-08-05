@@ -415,5 +415,22 @@ document.getElementById("resetBtn").addEventListener("click",function(){
 applyLang();
 renderSchema();
 </script>
+
+<script>
+(function(){
+  var btn = document.querySelector('#langGroup .btn[data-lang="sl"]');
+  if(btn) btn.click();
+  document.getElementById('surname').value="Novak";
+  document.getElementById('pname').value="Ana";
+  document.getElementById('date').value='2026-08-05';
+  function add(n,p,q){ addRow(n,p); var r=document.querySelector('#items tr:last-child'); r.querySelector('.qty-i').value=q; }
+      add("Cirkonij prevleka",470,1);
+      add("Porcelanska prevleka",460,1);
+      add("Bru\u0161enje zoba",120,2);
+      add("Provizori\u010dna prevleka",45,2);
+      add("Anestezija",20,1);
+  calc();
+})();
+</script>
 </body>
 </html>
