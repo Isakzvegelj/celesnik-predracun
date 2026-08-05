@@ -210,6 +210,33 @@
     .add-custom .btn{width:100%;}
   }
 
+  /* -------- PDF DOWNLOAD STAGE (off-screen, single compact A4 page) -------- */
+  #pdfstage{
+    position:fixed;left:-10000px;top:0;width:210mm;background:#fff;z-index:-9999;
+    --ink:#1a1a1a;--muted:#6b7280;--line:#d0d0d0;--paper:#ffffff;--card:#ffffff;
+    --gold:#b8860b;--gold-soft:#d4a853;--ctrl-bg:#fff;--ctrl-hover:#f0f0f0;--chip-hover:#fdf7e7;
+    --field-line:#aaa;--th-color:#444;--td-border:#eee;--empty:#bbb;--schema-border:#999;
+    --sign-line:#999;--clinic-title:#111;--clinic-addr:#333;--del-bg:#fdecec;--shadow:none;
+  }
+  #pdfstage .sheet{max-width:100%;border:none;box-shadow:none;padding:8mm 10mm;}
+  #pdfstage .clinic h2{font-size:15px;letter-spacing:1px;}
+  #pdfstage .clinic .addr{font-size:10px;}
+  #pdfstage .doc-title{font-size:13px;margin:4px 0 8px;}
+  #pdfstage .fields{grid-template-columns:1fr 1fr 1fr;gap:6px 12px;margin-bottom:8px;}
+  #pdfstage .field label{font-size:9px;margin-bottom:1px;}
+  #pdfstage .field input{font-size:12px;padding:2px;}
+  #pdfstage .schema-row{height:24px;margin-bottom:3px;border-width:1px;}
+  #pdfstage thead th{padding:3px 6px;font-size:9px;}
+  #pdfstage tbody td{padding:3px 6px;font-size:11px;}
+  #pdfstage td.svc{min-width:130px;}
+  #pdfstage td.svc input{font-size:11px;}
+  #pdfstage td .del{display:none;}
+  #pdfstage .total-row{margin-top:6px;}
+  #pdfstage .total-row .val{font-size:14px;min-width:90px;}
+  #pdfstage .sign{margin-top:16px;}
+  #pdfstage .sign .box{font-size:9px;width:180px;}
+  #pdfstage .footer-note{font-size:8.5px;margin-top:6px;}
+
   /* print */
   @media print{
     @page{size:A4;margin:0;}
@@ -240,6 +267,7 @@
   </div>
   <button class="btn" id="themeBtn" title="Temni / svetli način">🌙</button>
   <button class="btn" id="resetBtn" title="Reset">↺</button>
+  <button class="btn" id="pdfBtn" title="Shrani kot enostranski PDF" onclick="downloadPDF()">⬇ Shrani PDF</button>
   <button class="btn primary" onclick="window.print()" id="printBtn">🖨 Natisni / PDF</button>
 </div>
 
@@ -357,15 +385,15 @@ var T = {
   sl:{title:"PREDRAČUN",surname:"Priimek pacienta",name:"Ime pacienta",date:"Datum",
       schema:"Shema zob",rows:"vrste:",svc:"Storitve",qty:"Količina",price:"Cena",col:"Skupaj",
       grand:"Skupni znesek:",sign:"Podpis",catalog:"Katalog storitev — klikni za dodajanje",
-      print:"🖨 Natisni / PDF",custom:"+ Dodaj prazno vrstico",note:"Predračun ni račun. Veljavnost predračuna 3 mesece."},
+      print:"🖨 Natisni / PDF",pdf:"⬇ Shrani PDF",custom:"+ Dodaj prazno vrstico",note:"Predračun ni račun. Veljavnost predračuna 3 mesece."},
   it:{title:"PREVENTIVO",surname:"Cognome paziente",name:"Nome paziente",date:"Data",
       schema:"Schema denti",rows:"righe:",svc:"Prestazioni",qty:"Quantità",price:"Prezzo",col:"Totale",
       grand:"Totale complessivo:",sign:"Firma",catalog:"Catalogo prestazioni — clicca per aggiungere",
-      print:"🖨 Stampa / PDF",custom:"+ Aggiungi riga vuota",note:"Preventivo non è una fattura. Validità preventivo 3 mesi."},
+      print:"🖨 Stampa / PDF",pdf:"⬇ Salva PDF",custom:"+ Aggiungi riga vuota",note:"Preventivo non è una fattura. Validità preventivo 3 mesi."},
   de:{title:"KOSTENVORANSCHLAG",surname:"Nachname Patient",name:"Vorname Patient",date:"Datum",
       schema:"Zahnschema",rows:"Zeilen:",svc:"Leistungen",qty:"Menge",price:"Preis",col:"Summe",
       grand:"Gesamtbetrag:",sign:"Unterschrift",catalog:"Leistungsverzeichnis — klicken zum Hinzufügen",
-      print:"🖨 Drucken / PDF",custom:"+ Leere Zeile hinzufügen",note:"Kostenvoranschlag ist keine Rechnung. Gültigkeit 3 Monate."}
+      print:"🖨 Drucken / PDF",pdf:"⬇ PDF speichern",custom:"+ Leere Zeile hinzufügen",note:"Kostenvoranschlag ist keine Rechnung. Gültigkeit 3 Monate."}
 };
 
 /* ---------- HELPERS ---------- */
@@ -458,6 +486,7 @@ function applyLang(){
   document.getElementById("lblSign").textContent = t.sign;
   document.getElementById("catalogTitle").textContent = t.catalog;
   document.getElementById("printBtn").textContent = t.print;
+  document.getElementById("pdfBtn").textContent = t.pdf;
   document.getElementById("addCustomBtn").textContent = t.custom;
   var note=document.querySelector(".footer-note"); note.textContent=t.note;
   renderCatalog();
@@ -484,6 +513,78 @@ themeBtn.addEventListener("click", function(){
   var cur = document.documentElement.getAttribute("data-theme");
   setTheme(cur === "dark" ? "light" : "dark");
 });
+
+/* ---------- PDF EXPORT (single compact A4 page, ready to print) ---------- */
+function loadPdfLibs(cb){
+  if(window.jspdf && window.html2canvas){ cb(); return; }
+  _pdfCB = cb;
+  var srcs=[
+    "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js",
+    "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"
+  ];
+  var left = srcs.length;
+  function done(){
+    left--;
+    if(left===0){ var c=_pdfCB; _pdfCB=null; if(c) c(); }
+  }
+  srcs.forEach(function(src){
+    var s=document.createElement("script");
+    s.src=src;
+    s.onload=done;
+    s.onerror=done;
+    document.head.appendChild(s);
+  });
+}
+function buildStage(){
+  var stage=document.createElement("div");
+  stage.setAttribute("id","pdfstage");
+  stage.appendChild(document.querySelector(".sheet").cloneNode(true));
+  document.body.appendChild(stage);
+  return stage;
+}
+function downloadPDF(){
+  var btn=document.getElementById("pdfBtn");
+  var old=btn.textContent;
+  btn.disabled=true; btn.textContent="⏳ …";
+  loadPdfLibs(function(){
+    if(!window.jspdf || !window.html2canvas){
+      // no internet for the CDN libs -> fall back to the OS print / PDF dialog
+      btn.disabled=false; btn.textContent=old;
+      window.print();
+      return;
+    }
+    var stage=null;
+    try{
+      stage=buildStage();
+      html2canvas(stage.querySelector(".sheet"),{scale:2,backgroundColor:"#ffffff"})
+        .then(function(canvas){
+          try{
+            var pdf=new window.jspdf.jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+            var pw=210,ph=297,m=5,aw=pw-2*m,ah=ph-2*m;
+            var imgW=aw, imgH=imgW*canvas.height/canvas.width;
+            if(imgH>ah){ imgH=ah; imgW=imgH*canvas.width/canvas.height; }
+            var x=(pw-imgW)/2, y=(ph-imgH)/2;
+            pdf.addImage(canvas.toDataURL("image/jpeg",0.95),"JPEG",x,y,imgW,imgH);
+            var pre = (L==="it")?"Preventivo_":(L==="de")?"Kostenvoranschlag_":"Predracun_";
+            var sur=(document.getElementById("surname").value||"pacient").replace(/[^A-Za-z0-9_-]/g,"");
+            pdf.save(pre+sur+".pdf");
+          }finally{
+            if(stage&&stage.parentNode)stage.parentNode.removeChild(stage);
+            btn.disabled=false; btn.textContent=old;
+          }
+        })
+        .catch(function(e){
+          if(stage&&stage.parentNode)stage.parentNode.removeChild(stage);
+          btn.disabled=false; btn.textContent=old;
+          try{ alert("Napaka pri izdelavi PDF: "+e); }catch(_){}
+        });
+    }catch(e){
+      if(stage&&stage.parentNode)stage.parentNode.removeChild(stage);
+      btn.disabled=false; btn.textContent=old;
+      window.print();
+    }
+  });
+}
 
 /* ---------- INIT ---------- */
 document.getElementById("date").value = new Date().toISOString().slice(0,10);
